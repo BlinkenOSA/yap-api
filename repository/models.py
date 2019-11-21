@@ -1,0 +1,140 @@
+from django.db import models
+from django_date_extensions.fields import ApproximateDateField
+
+
+class Record(models.Model):
+    id = models.AutoField(primary_key=True)
+
+    # Archival Identifiers
+    fonds = models.IntegerField(verbose_name='Fonds')
+    subfonds = models.IntegerField(verbose_name='Subfonds')
+    series = models.IntegerField(verbose_name='Series')
+    container_no = models.IntegerField(verbose_name='Container Number')
+    sequence_no = models.IntegerField(verbose_name='Sequence Number')
+
+    # Metadata
+    title_original = models.CharField(verbose_name='Original Title', max_length=500)
+    title_english = models.CharField(verbose_name='English Title', max_length=500, blank=True, null=True)
+    creation_date_start = ApproximateDateField(verbose_name='Date of Creation (Start)')
+    creation_date_end = ApproximateDateField(verbose_name='Date of Creation (End)', blank=True, null=True)
+
+    types = models.ManyToManyField('Type', verbose_name='Type', blank=True)
+    genres = models.ManyToManyField('Genre', verbose_name='Genre', blank=True)
+    languages = models.ManyToManyField('Language', verbose_name='Language', blank=True)
+
+    extent = models.CharField(verbose_name='Extent', max_length=50, blank=True, null=True)
+    DESCRIPTION_LEVEL = [('F', 'Folder'), ('I', 'Item')]
+    description_level = models.CharField(max_length=2, choices=DESCRIPTION_LEVEL, default='F')
+
+    temporal_coverage_start = models.IntegerField(verbose_name='Temporal Coverage (Start)', blank=True, null=True)
+    temporal_coverage_end = models.IntegerField(verbose_name='Temporal Coverage (End)', blank=True, null=True)
+
+    spatial_coverage = models.ManyToManyField('City', verbose_name='Spatial Coverage', blank=True)
+
+    privacy = models.TextField(verbose_name='Privacy / Access', blank=True)
+    internal_note = models.TextField(verbose_name='Internal Note', blank=True)
+    preview = models.CharField(verbose_name='Preview', max_length=200, blank=True, null=True)
+
+    class Meta:
+        db_table = 'records'
+        verbose_name = 'record'
+        verbose_name_plural = 'records'
+
+
+class RecordCreator(models.Model):
+    id = models.AutoField(primary_key=True)
+    record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_creators')
+    creator = models.CharField(verbose_name='Creator', max_length=500)
+
+    class Meta:
+        db_table = 'record_creators'
+        verbose_name = 'creator'
+        verbose_name_plural = 'creators'
+
+
+class RecordDescription(models.Model):
+    id = models.AutoField(primary_key=True)
+    record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_descriptions')
+    description = models.TextField(verbose_name='Description')
+
+    class Meta:
+        db_table = 'record_descriptions'
+        verbose_name = 'description'
+        verbose_name_plural = 'descriptions'
+
+
+class RecordCollector(models.Model):
+    id = models.AutoField(primary_key=True)
+    record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_collectors')
+    collector = models.CharField(verbose_name='Collector', max_length=300)
+
+    class Meta:
+        db_table = 'record_collectors'
+        verbose_name = 'collector'
+        verbose_name_plural = 'collectors'
+
+
+class RecordSubject(models.Model):
+    id = models.AutoField(primary_key=True)
+    record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_subjects')
+    subject = models.CharField(verbose_name='Subject', max_length=200)
+
+    class Meta:
+        db_table = 'record_subjects'
+        verbose_name = 'subject'
+        verbose_name_plural = 'subjects'
+
+
+class RecordSubjectPerson(models.Model):
+    id = models.AutoField(primary_key=True)
+    record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_subject_people')
+    subject_person = models.CharField(verbose_name='Subject (Person)', max_length=300)
+
+    class Meta:
+        db_table = 'record_subject_people'
+        verbose_name = 'subject person'
+        verbose_name_plural = 'subject people'
+
+
+class Type(models.Model):
+    id = models.AutoField(primary_key=True)
+    type = models.CharField(verbose_name='Type', max_length=100)
+
+    class Meta:
+        db_table = 'types'
+        verbose_name = 'type'
+        verbose_name_plural = 'types'
+
+
+class Genre(models.Model):
+    id = models.AutoField(primary_key=True)
+    genre = models.CharField(verbose_name='Genre', max_length=50)
+
+    class Meta:
+        db_table = 'genres'
+        verbose_name = 'genre'
+        verbose_name_plural = 'genres'
+
+
+class Language(models.Model):
+    id = models.AutoField(primary_key=True)
+    language = models.CharField(verbose_name='Language', max_length=100)
+    iso_639_1 = models.CharField(verbose_name='ISO 639-1', max_length=10, blank=True, null=True)
+    iso_639_2 = models.CharField(verbose_name='ISO 639-2', max_length=10, blank=True, null=True)
+
+    class Meta:
+        db_table = 'languages'
+        verbose_name = 'language'
+        verbose_name_plural = 'languages'
+
+
+class City(models.Model):
+    id = models.AutoField(primary_key=True)
+    city = models.CharField(verbose_name='City', max_length=50)
+    latitude = models.FloatField(verbose_name='Latitude', blank=True, null=True)
+    longitude = models.FloatField(verbose_name='Longitude', blank=True, null=True)
+
+    class Meta:
+        db_table = 'cities'
+        verbose_name = 'city'
+        verbose_name_plural = 'cities'
