@@ -44,12 +44,23 @@ class Record(models.Model):
 class RecordCreator(models.Model):
     id = models.AutoField(primary_key=True)
     record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_creators')
-    creator = models.CharField(verbose_name='Creator', max_length=300)
+    creator = models.CharField(verbose_name='Creator', max_length=500)
 
     class Meta:
         db_table = 'record_creators'
         verbose_name = 'creator'
         verbose_name_plural = 'creators'
+
+
+class RecordDescription(models.Model):
+    id = models.AutoField(primary_key=True)
+    record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_descriptions')
+    description = models.TextField(verbose_name='Description')
+
+    class Meta:
+        db_table = 'record_descriptions'
+        verbose_name = 'description'
+        verbose_name_plural = 'descriptions'
 
 
 class RecordCollector(models.Model):
@@ -120,8 +131,8 @@ class Language(models.Model):
 class City(models.Model):
     id = models.AutoField(primary_key=True)
     city = models.CharField(verbose_name='City', max_length=50)
-    latitude = models.FloatField(verbose_name='Latitude')
-    longitude = models.FloatField(verbose_name='Longitude')
+    latitude = models.FloatField(verbose_name='Latitude', blank=True, null=True)
+    longitude = models.FloatField(verbose_name='Longitude', blank=True, null=True)
 
     class Meta:
         db_table = 'cities'
