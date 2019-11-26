@@ -10,9 +10,9 @@ DEBUG = False
 ALLOWED_HOSTS = []
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.environ('STATIC_ROOT', os.path.join(BASE_DIR, 'public', 'static'))
+STATIC_ROOT = os.path.join(BASE_DIR, 'public', 'static')
 
 MEDIA_URL = '/media/'
-MEDIA_ROOT = os.environ('MEDIA_ROOT', os.path.join(BASE_DIR, 'public', 'media'))
+MEDIA_ROOT = os.path.join(BASE_DIR, 'public', 'media')
 
 CORS_ORIGIN_ALLOW_ALL = True
