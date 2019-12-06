@@ -57,6 +57,8 @@ class RecordIndexer:
         self.doc['title_english'] = self.record.title_english
         self.doc['date_of_creation_start'] = self.record.creation_date_start
         self.doc['date_of_creation_end'] = self.record.creation_date_end
+        self.doc['temporal_coverage_start'] = self.record.temporal_coverage_start
+        self.doc['temporal_coverage_end'] = self.record.temporal_coverage_end
 
         for description in self.record.record_descriptions.all():
             self.doc['description'].append(description.description)
