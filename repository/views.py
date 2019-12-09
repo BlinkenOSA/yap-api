@@ -1,5 +1,7 @@
 import re
 
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 from pysolr import SolrError
 from rest_framework import generics
 from rest_framework.generics import ListAPIView
@@ -7,9 +9,9 @@ from django_filters import rest_framework as filters, OrderingFilter
 from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
+from repository.inspectors.record_search_inspector import RecordSearchInspector
 from repository.models import Record
 from repository.serializers import RecordSerializer
-from yap_api import settings
 from yap_api.searcher import Searcher
 
 
@@ -18,15 +20,43 @@ class RecordDetail(generics.RetrieveAPIView):
     serializer_class = RecordSerializer
 
 
+class RecordFilterClass(filters.FilterSet):
+    cursorMark = filters.CharFilter(label='Cursor')
+    query = filters.CharFilter(label='Search')
+    ordering = OrderingFilter(fields=(('score', 'score'),))
+
+    record_origin = filters.CharFilter(label='Record Origin')
+    description_level = filters.CharFilter(label='Description Level')
+    language = filters.CharFilter(label='Language')
+    city = filters.CharFilter(label='City')
+    creator = filters.CharFilter(label='Creator')
+    collector = filters.CharFilter(label='Collector')
+    collection = filters.CharFilter(label='Collection')
+    genre = filters.CharFilter(label='Genre')
+    type = filters.CharFilter(label='Type')
+    subject = filters.CharFilter(label='Subject')
+    subject_person = filters.CharFilter(label='Subject (Person)')
+
+    year_coverage_start = filters.NumberFilter(label='Coverage year (Start)')
+    year_coverage_end = filters.NumberFilter(label='Coverage year (End)')
+
+    geo_bottom_left = filters.CharFilter(label='Map bounding box (Bottom left corner)')
+    geo_top_right = filters.CharFilter(label='Map bounding box (Top right corner)')
+
+
+@method_decorator(name='get', decorator=swagger_auto_schema(
+   filter_inspectors=[RecordSearchInspector]
+))
 class RecordList(ListAPIView):
     queryset = Record.objects.all()
+    pagination_class = None
     filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = RecordFilterClass
     core = "yap"
 
     def list(self, request, *args, **kwargs):
         filters = []
         date_filters = []
-        geo_filters = []
         cursor_mark = request.query_params.get('cursorMark', '*')
 
         qf = [
