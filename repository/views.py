@@ -105,7 +105,7 @@ class RecordList(ListAPIView):
             'search': request.query_params.get('query', ''),
             'ordering': request.query_params.get('ordering', '-score'),
             'qf': qf,
-            'fl': 'archival_reference_number,title_original,title_english,'
+            'fl': 'id,archival_reference_number,title_original,title_english,'
                   'date_of_creation_start,date_of_creation_end,'
                   'temporal_coverage_start,temporal_coverage_end,'
                   'description,genre,type,city,',
