@@ -16,16 +16,23 @@ class CitySerializer(serializers.ModelSerializer):
 
 
 class RecordSerializer(serializers.ModelSerializer):
-    types = serializers.SlugRelatedField(many=True, slug_field='type', read_only=True)
-    genres = serializers.SlugRelatedField(many=True, slug_field='genre', read_only=True)
-    languages = LanguageSerializer(many=True)
-    spatial_coverage = CitySerializer(many=True)
-    descriptions = serializers.SlugRelatedField(many=True, slug_field='description', read_only=True, source='record_descriptions')
-    collectors = serializers.SlugRelatedField(many=True, slug_field='collector', read_only=True, source='record_collectors')
-    creators = serializers.SlugRelatedField(many=True, slug_field='creator', read_only=True, source='record_creators')
-    subjects = serializers.SlugRelatedField(many=True, slug_field='subject', read_only=True, source='record_subjects')
+    id = serializers.CharField(read_only=True)
+    type = serializers.SlugRelatedField(many=True, slug_field='type', read_only=True, source='types')
+    genre = serializers.SlugRelatedField(many=True, slug_field='genre', read_only=True, source='genres')
+    language = LanguageSerializer(many=True, source='languages')
+    city = CitySerializer(many=True, source='spatial_coverage')
+    description = serializers.SlugRelatedField(many=True, slug_field='description', read_only=True, source='record_descriptions')
+    collector = serializers.SlugRelatedField(many=True, slug_field='collector', read_only=True, source='record_collectors')
+    creator = serializers.SlugRelatedField(many=True, slug_field='creator', read_only=True, source='record_creators')
+    subject = serializers.SlugRelatedField(many=True, slug_field='subject', read_only=True, source='record_subjects')
     subject_people = serializers.SlugRelatedField(many=True, slug_field='subject_person', read_only=True, source='record_subject_people')
 
     class Meta:
         model = Record
-        exclude = ('preview',)
+        fields = ['id', 'fonds', 'subfonds', 'series', 'container_no', 'sequence_no',
+                  'title_original', 'title_english', 'creation_date_start', 'creation_date_end',
+                  'extent', 'description_level', 'description',
+                  'temporal_coverage_start', 'temporal_coverage_end',
+                  'type', 'genre', 'language', 'city',
+                  'collector', 'creator', 'subject', 'subject_people',
+                  'privacy']
