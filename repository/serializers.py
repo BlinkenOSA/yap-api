@@ -19,7 +19,7 @@ class RecordSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     type = serializers.SlugRelatedField(many=True, slug_field='type', read_only=True, source='types')
     genre = serializers.SlugRelatedField(many=True, slug_field='genre', read_only=True, source='genres')
-    language = LanguageSerializer(many=True, source='language')
+    language = LanguageSerializer(many=True, source='languages')
     city = CitySerializer(many=True, source='spatial_coverage')
     description = serializers.SlugRelatedField(many=True, slug_field='description', read_only=True, source='record_descriptions')
     collector = serializers.SlugRelatedField(many=True, slug_field='collector', read_only=True, source='record_collectors')
@@ -29,10 +29,10 @@ class RecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        include = ['id', 'fonds', 'subfonds', 'series', 'container_no', 'sequence_no',
-                   'title_original', 'title_english', 'creation_date_start', 'creation_date_end',
-                   'extent', 'description_level', 'description',
-                   'temporal_coverage_start', 'temporal_coverage_end',
-                   'type', 'genre', 'language', 'city',
-                   'collector', 'creator', 'subject', 'subject_people',
-                   'privacy']
+        fields = ['id', 'fonds', 'subfonds', 'series', 'container_no', 'sequence_no',
+                  'title_original', 'title_english', 'creation_date_start', 'creation_date_end',
+                  'extent', 'description_level', 'description',
+                  'temporal_coverage_start', 'temporal_coverage_end',
+                  'type', 'genre', 'language', 'city',
+                  'collector', 'creator', 'subject', 'subject_people',
+                  'privacy']
