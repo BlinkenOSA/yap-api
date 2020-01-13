@@ -19,6 +19,9 @@ class RecordSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
     type = serializers.SlugRelatedField(many=True, slug_field='type', read_only=True, source='types')
     genre = serializers.SlugRelatedField(many=True, slug_field='genre', read_only=True, source='genres')
+    archival_reference_number = serializers.SerializerMethodField()
+    date_of_creation_start = serializers.CharField(source='creation_date_start')
+    date_of_creation_end = serializers.CharField(source='creation_date_end')
     language = LanguageSerializer(many=True, source='languages')
     city = CitySerializer(many=True, source='spatial_coverage')
     description = serializers.SlugRelatedField(many=True, slug_field='description', read_only=True, source='record_descriptions')
@@ -27,10 +30,13 @@ class RecordSerializer(serializers.ModelSerializer):
     subject = serializers.SlugRelatedField(many=True, slug_field='subject', read_only=True, source='record_subjects')
     subject_people = serializers.SlugRelatedField(many=True, slug_field='subject_person', read_only=True, source='record_subject_people')
 
+    def get_archival_reference_number(self, obj):
+        return "HU OSA %s-%s-%s:%s/%s" % (obj.fonds, obj.subfonds, obj.series, obj.container_no, obj.sequence_no)
+
     class Meta:
         model = Record
-        fields = ['id', 'fonds', 'subfonds', 'series', 'container_no', 'sequence_no',
-                  'title_original', 'title_english', 'creation_date_start', 'creation_date_end',
+        fields = ['id', 'archival_reference_number', 'fonds', 'subfonds', 'series', 'container_no', 'sequence_no',
+                  'title_original', 'title_english', 'date_of_creation_start', 'date_of_creation_end',
                   'extent', 'description_level', 'description',
                   'temporal_coverage_start', 'temporal_coverage_end',
                   'type', 'genre', 'language', 'city',
