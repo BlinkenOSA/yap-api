@@ -1,8 +1,9 @@
 import csv
 import os
 
+import django
+from django.core.exceptions import ValidationError
 from django.core.management import BaseCommand
-from django.db import DataError
 
 from repository.models import Record, RecordCreator, Type, Genre, Language, RecordDescription, RecordSubject, \
     RecordSubjectPerson, City, RecordCollector
@@ -17,27 +18,29 @@ class Command(BaseCommand):
         parser.add_argument('--series', dest='series', help='Series number.', default=None)
 
     def handle(self, *args, **options):
-        fonds = options['fonds']
-        subfonds = options['subfonds']
-        series = options['series']
+        fonds = options.get('fonds', 0)
+        subfonds = options.get('subfonds', 0)
+        series = options.get('series', 0)
 
         with open(os.path.join(os.getcwd(), 'import', 'HU OSA %s-%s-%s.csv' % (fonds, subfonds, series)), mode='r') as csv_file:
             csv_reader = csv.DictReader(csv_file)
             for row in csv_reader:
                 if row["FondsID"] != '':
                     record, created = Record.objects.get_or_create(fonds=row['FondsID'],
-                                                                    subfonds=row['SubfondsID'], series=row['SeriesID'],
-                                                                    container_no=row['Container'], sequence_no=row['No'])
+                                                                   subfonds=row['SubfondsID'], series=row['SeriesID'],
+                                                                   container_no=row['Container'], sequence_no=row['No'])
                     record.title_original = row['Title Original']
                     record.title_english = row['Title English']
 
-                    record.creation_date_start = self.make_date(row['Date of Creation (YYYY)'],
-                                                                row['Date of Creation (MM)'],
-                                                                row['Date of Creation (DD)'])
+                    if row['Date of Creation (YYYY)'] != '':
+                        record.creation_date_start = self.make_date(row['Date of Creation (YYYY)'],
+                                                                    row['Date of Creation (MM)'],
+                                                                    row['Date of Creation (DD)'])
 
-                    record.creation_date_end = self.make_date(row['Date of Creation2 (YYYY)'],
-                                                              row['Date of Creation2 (MM)'],
-                                                              row['Date of Creation2 (DD)'])
+                    if row['Date of Creation2 (YYYY)'] != '':
+                        record.creation_date_end = self.make_date(row['Date of Creation2 (YYYY)'],
+                                                                  row['Date of Creation2 (MM)'],
+                                                                  row['Date of Creation2 (DD)'])
 
                     record.extent = row['Extent']
                     if row['Description Level'] == 'Folder':
@@ -45,8 +48,11 @@ class Command(BaseCommand):
                     else:
                         record.description_level = 'I'
 
-                    record.temporal_coverage_start = row['Temporal Coverage1 (YYYY)']
-                    record.temporal_coverage_end = row['Temporal Coverage2 (YYYY)']
+                    if row['Temporal Coverage1 (YYYY)'] != '':
+                        record.temporal_coverage_start = row['Temporal Coverage1 (YYYY)']
+
+                    if row['Temporal Coverage2 (YYYY)'] != '':
+                        record.temporal_coverage_end = row['Temporal Coverage2 (YYYY)']
 
                     record.privacy = row['Privacy/Access']
                     record.internal_note = row['Internal Note']
@@ -96,23 +102,26 @@ class Command(BaseCommand):
                         if subject_person != '':
                             RecordSubjectPerson.objects.get_or_create(record=record, subject_person=subject_person.strip())
 
-                    print("Adding record: HU OSA %s-%s-%s:%s/%s" % (fonds, subfonds, series, row['Container'], row['No']))
+                    print("Adding record: HU OSA %s-%s-%s:%s/%s" % (row['FondsID'], row['SubfondsID'], row['SeriesID'], row['Container'], row['No']))
 
-                # Spatial Coverage
-                city, created = City.objects.get_or_create(city=row['Spatial Coverage3'])
-                if not created:
-                    geo = row['Geo Coordinates'].split(",")
-                    city.latitude = geo[0]
-                    city.longitude = geo[1]
-                    city.save()
+                if row['Geo Coordinates'] != '':
+                    # Spatial Coverage
+                    city, created = City.objects.get_or_create(city=row['Spatial Coverage3'])
+                    if not created:
+                        geo = row['Geo Coordinates'].split(",")
+                        city.latitude = geo[0]
+                        city.longitude = geo[1]
+                        city.save()
 
-                record.spatial_coverage.add(city)
-                print("Adding city: %s to record" % city.city)
+                    record.spatial_coverage.add(city)
+                    print("Adding city: %s to record" % city.city)
 
                 try:
                     record.save()
-                except ValueError:
-                    print('Error')
+                except ValueError as e:
+                    print(e)
+                except ValidationError as e:
+                    print(e)
 
     def make_date(self, year, month, day):
         if month:
