@@ -55,8 +55,8 @@ class RecordIndexer:
                                                                            self.record.sequence_no)
         self.doc['title_original'] = self.record.title_original
         self.doc['title_english'] = self.record.title_english
-        self.doc['date_of_creation_start'] = self.record.creation_date_start
-        self.doc['date_of_creation_end'] = self.record.creation_date_end
+        self.doc['date_of_creation_start'] = str(self.record.creation_date_start)
+        self.doc['date_of_creation_end'] = str(self.record.creation_date_end)
         self.doc['temporal_coverage_start'] = self.record.temporal_coverage_start
         self.doc['temporal_coverage_end'] = self.record.temporal_coverage_end
 
