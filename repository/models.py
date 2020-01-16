@@ -2,8 +2,23 @@ from django.db import models
 from django_date_extensions.fields import ApproximateDateField
 
 
+class Collection(models.Model):
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(verbose_name='Title', max_length=500)
+    year_start = models.IntegerField(verbose_name='Year Start', blank=True, null=True)
+    year_end = models.IntegerField(verbose_name='Year End', blank=True, null=True)
+    archival_reference_code = models.CharField(verbose_name='Archival Reference Code', max_length=100, blank=True, null=True)
+    catalog_url = models.CharField(verbose_name='Catalog URL', max_length=500, blank=True, null=True)
+
+    class Meta:
+        db_table = 'collections'
+        verbose_name = 'collection'
+        verbose_name_plural = 'collections'
+
+
 class Record(models.Model):
     id = models.AutoField(primary_key=True)
+    collection = models.ForeignKey(Collection, on_delete=models.SET_NULL, blank=True, null=True)
 
     # Archival Identifiers
     fonds = models.IntegerField(verbose_name='Fonds')
@@ -34,6 +49,7 @@ class Record(models.Model):
     privacy = models.TextField(verbose_name='Privacy / Access', blank=True)
     internal_note = models.TextField(verbose_name='Internal Note', blank=True)
     preview = models.CharField(verbose_name='Preview', max_length=200, blank=True, null=True)
+    catalog_url = models.CharField(verbose_name='Catalog URL', max_length=500, blank=True, null=True)
 
     class Meta:
         db_table = 'records'

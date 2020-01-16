@@ -10,9 +10,14 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_400_BAD_REQUEST
 
 from repository.inspectors.record_search_inspector import RecordSearchInspector
-from repository.models import Record
-from repository.serializers import RecordSerializer
+from repository.models import Record, Collection
+from repository.serializers import RecordSerializer, CollectionSerializer
 from yap_api.searcher import Searcher
+
+
+class CollectionList(generics.ListAPIView):
+    queryset = Collection.objects.all()
+    serializer_class = CollectionSerializer
 
 
 class RecordDetail(generics.RetrieveAPIView):

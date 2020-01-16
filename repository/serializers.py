@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from repository.models import Record, Type, Genre, Language, City, RecordCreator, RecordCollector
+from repository.models import Record, Type, Genre, Language, City, RecordCreator, RecordCollector, Collection
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -13,6 +13,12 @@ class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         exclude = ('id',)
+
+
+class CollectionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Collection
+        fields = '__all__'
 
 
 class RecordSerializer(serializers.ModelSerializer):
