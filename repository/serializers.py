@@ -16,6 +16,12 @@ class CitySerializer(serializers.ModelSerializer):
 
 
 class CollectionSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(read_only=True)
+    record_count = serializers.SerializerMethodField()
+
+    def get_record_count(self, obj):
+        return obj.record_set.count()
+
     class Meta:
         model = Collection
         fields = '__all__'
@@ -23,6 +29,7 @@ class CollectionSerializer(serializers.ModelSerializer):
 
 class RecordSerializer(serializers.ModelSerializer):
     id = serializers.CharField(read_only=True)
+    collection = CollectionSerializer(read_only=True)
     type = serializers.SlugRelatedField(many=True, slug_field='type', read_only=True, source='types')
     genre = serializers.SlugRelatedField(many=True, slug_field='genre', read_only=True, source='genres')
     archival_reference_number = serializers.SerializerMethodField()
@@ -41,7 +48,7 @@ class RecordSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Record
-        fields = ['id', 'archival_reference_number', 'fonds', 'subfonds', 'series', 'container_no', 'sequence_no',
+        fields = ['id', 'collection', 'archival_reference_number', 'fonds', 'subfonds', 'series', 'container_no', 'sequence_no',
                   'title_original', 'title_english', 'date_of_creation_start', 'date_of_creation_end',
                   'extent', 'description_level', 'description',
                   'temporal_coverage_start', 'temporal_coverage_end',

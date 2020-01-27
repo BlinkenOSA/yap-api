@@ -53,6 +53,9 @@ class RecordIndexer:
                                                                            self.record.series,
                                                                            self.record.container_no,
                                                                            self.record.sequence_no)
+        if self.record.collection:
+            self.doc['collection_title'] = self.record.collection.title
+            self.doc['collection_archival_reference_code'] = self.record.collection.archival_reference_code
         self.doc['title_original'] = self.record.title_original
         self.doc['title_english'] = self.record.title_english
         self.doc['date_of_creation_start'] = str(self.record.creation_date_start)
@@ -96,6 +99,9 @@ class RecordIndexer:
 
         self.doc['year_coverage_start'] = self.record.temporal_coverage_start
         self.doc['year_coverage_end'] = self.record.temporal_coverage_end
+
+        if self.record.collection:
+            self.doc['collection_facet'] = self.doc['collection_title']
 
         self.doc['genre_facet'] = self.doc['genre']
         self.doc['type_facet'] = self.doc['type']
