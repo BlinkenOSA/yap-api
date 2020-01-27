@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from repository.models import Record, Type, Genre, Language, City, RecordCreator, RecordCollector, Collection
+from repository.models import Record, Language, City, Collection
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -42,6 +42,8 @@ class RecordSerializer(serializers.ModelSerializer):
     creator = serializers.SlugRelatedField(many=True, slug_field='creator', read_only=True, source='record_creators')
     subject = serializers.SlugRelatedField(many=True, slug_field='subject', read_only=True, source='record_subjects')
     subject_people = serializers.SlugRelatedField(many=True, slug_field='subject_person', read_only=True, source='record_subject_people')
+    thumbnails = serializers.SlugRelatedField(many=True, slug_field='thumbnail', read_only=True, source='record_thumbnails')
+    media_files = serializers.SlugRelatedField(many=True, slug_field='file', read_only=True, source='record_media_files')
 
     def get_archival_reference_number(self, obj):
         return "HU OSA %s-%s-%s:%s/%s" % (obj.fonds, obj.subfonds, obj.series, obj.container_no, obj.sequence_no)
@@ -54,4 +56,4 @@ class RecordSerializer(serializers.ModelSerializer):
                   'temporal_coverage_start', 'temporal_coverage_end',
                   'type', 'genre', 'language', 'city',
                   'collector', 'creator', 'subject', 'subject_people',
-                  'privacy']
+                  'privacy', 'thumbnails', 'media_files']
