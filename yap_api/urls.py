@@ -21,6 +21,7 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('v1/repository/', include('repository.urls', namespace='repository-v1')),
+    path('grappelli/', include('grappelli.urls')),
     path('admin/', admin.site.urls),
 
     # Swagger endpoints

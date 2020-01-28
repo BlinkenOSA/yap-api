@@ -1,0 +1,15 @@
+.grp-td.description {
+    width: 100%;
+}
+
+.grp-td.file {
+    width: 50%;
+}
+
+.grp-td.thumbnail {
+    width: 50%;
+}
+
+.tableText {
+    width: 100% !important;
+}
