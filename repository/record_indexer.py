@@ -19,6 +19,7 @@ class RecordIndexer:
             'genre': [],
             'type': [],
             'city': [],
+            'thumbnails': [],
 
             # Search fields
             'description_search': [],
@@ -62,6 +63,9 @@ class RecordIndexer:
         self.doc['date_of_creation_end'] = str(self.record.creation_date_end)
         self.doc['temporal_coverage_start'] = self.record.temporal_coverage_start
         self.doc['temporal_coverage_end'] = self.record.temporal_coverage_end
+
+        for thumbnail in self.record.record_thumbnails.all():
+            self.doc['thumbnails'].append(thumbnail.thumbnail)
 
         for description in self.record.record_descriptions.all():
             self.doc['description'].append(description.description)
