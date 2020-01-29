@@ -2,7 +2,48 @@ from django.db import models
 from django.contrib import admin
 from django.forms import TextInput
 
-from repository.models import Record, RecordThumbnail, RecordMedia, RecordDescription, City, Collection
+from repository.models import Record, RecordThumbnail, RecordMedia, RecordDescription, City, Collection, RecordSubject, \
+    RecordSubjectPerson, RecordCreator, RecordCollector
+
+
+class RecordSubjectInline(admin.TabularInline):
+    formfield_overrides = {
+        models.CharField: {
+            'widget': TextInput(attrs={'class': 'tableText'})
+        }
+    }
+    model = RecordSubject
+    extra = 1
+
+
+class RecordSubjectPersonInline(admin.TabularInline):
+    formfield_overrides = {
+        models.CharField: {
+            'widget': TextInput(attrs={'class': 'tableText'})
+        }
+    }
+    model = RecordSubjectPerson
+    extra = 1
+
+
+class RecordCreatorInline(admin.TabularInline):
+    formfield_overrides = {
+        models.CharField: {
+            'widget': TextInput(attrs={'class': 'tableText'})
+        }
+    }
+    model = RecordCreator
+    extra = 1
+
+
+class RecordCollectorInline(admin.TabularInline):
+    formfield_overrides = {
+        models.CharField: {
+            'widget': TextInput(attrs={'class': 'tableText'})
+        }
+    }
+    model = RecordCollector
+    extra = 1
 
 
 class RecordDescriptionInline(admin.TabularInline):
@@ -47,6 +88,10 @@ class RecordAdmin(admin.ModelAdmin):
         RecordMediaThumbnailInline,
         RecordThumbnailInline,
         RecordDescriptionInline,
+        RecordCreatorInline,
+        RecordCollectorInline,
+        RecordSubjectInline,
+        RecordSubjectPersonInline
     ]
     search_fields = ['title_original', 'title_english', 'record_descriptions__description']
     preserve_filters = True
@@ -75,6 +120,18 @@ class RecordAdmin(admin.ModelAdmin):
         ), (
             '',
             {
+                'classes': ('placeholder record_creators-group',),
+                'fields': ()
+            }
+        ), (
+            '',
+            {
+                'classes': ('placeholder record_collectors-group',),
+                'fields': ()
+            }
+        ), (
+            '',
+            {
                 'fields': ('types', 'genres', 'languages', 'spatial_coverage')
             }
         ), (
@@ -82,6 +139,18 @@ class RecordAdmin(admin.ModelAdmin):
             {
                 'classes': ('grp-collapse grp-closed placeholder record_descriptions-group',),
                 'fields': ()
+            }
+        ), (
+            '',
+            {
+                'classes': ("placeholder record_subjects-group",),
+                'fields': (),
+            }
+        ), (
+            '',
+            {
+                'classes': ("placeholder record_subject_people-group",),
+                'fields': (),
             }
         ), (
             '',
