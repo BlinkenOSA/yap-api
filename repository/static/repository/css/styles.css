@@ -10,6 +10,22 @@
     width: 50%;
 }
 
+.grp-td.creator {
+    width: 50%;
+}
+
+.grp-td.collector {
+    width: 50%;
+}
+
+.grp-td.subject {
+    width: 50%;
+}
+
+.grp-td.subject_person {
+    width: 50%;
+}
+
 .tableText {
     width: 100% !important;
 }
