@@ -113,7 +113,7 @@ class RecordList(ListAPIView):
             'fl': 'id,archival_reference_number,title_original,title_english,'
                   'date_of_creation_start,date_of_creation_end,'
                   'temporal_coverage_start,temporal_coverage_end,'
-                  'description,genre,type,city,',
+                  'description,genre,type,city,thumbnails',
             'facet': True,
             'facet_fields': [
                 'record_origin_facet', 'description_level_facet', 'language_facet',
