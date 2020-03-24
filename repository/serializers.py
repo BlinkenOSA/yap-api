@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from repository.models import Record, Language, City, Collection
+from repository.models import Record, Language, City, Collection, RecordMedia
 
 
 class LanguageSerializer(serializers.ModelSerializer):
@@ -13,6 +13,12 @@ class CitySerializer(serializers.ModelSerializer):
     class Meta:
         model = City
         exclude = ('id',)
+
+
+class MediaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RecordMedia
+        fields = ['file', 'mimetype']
 
 
 class CollectionSerializer(serializers.ModelSerializer):
@@ -43,7 +49,7 @@ class RecordSerializer(serializers.ModelSerializer):
     subject = serializers.SlugRelatedField(many=True, slug_field='subject', read_only=True, source='record_subjects')
     subject_people = serializers.SlugRelatedField(many=True, slug_field='subject_person', read_only=True, source='record_subject_people')
     thumbnails = serializers.SlugRelatedField(many=True, slug_field='thumbnail', read_only=True, source='record_thumbnails')
-    media_files = serializers.SlugRelatedField(many=True, slug_field='file', read_only=True, source='record_media_files')
+    media_files = MediaSerializer(many=True, read_only=True, source='record_media_files')
 
     def get_archival_reference_number(self, obj):
         return "HU OSA %s-%s-%s:%s/%s" % (obj.fonds, obj.subfonds, obj.series, obj.container_no, obj.sequence_no)
