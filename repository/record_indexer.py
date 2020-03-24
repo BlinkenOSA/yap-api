@@ -105,6 +105,7 @@ class RecordIndexer:
         self.doc['year_coverage_end'] = self.record.temporal_coverage_end
 
         if self.record.collection:
+            self.doc['collection_id_facet'] = self.record.collection.id
             self.doc['collection_facet'] = self.doc['collection_title']
 
         self.doc['genre_facet'] = self.doc['genre']

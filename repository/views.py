@@ -37,6 +37,7 @@ class RecordFilterClass(filters.FilterSet):
     creator = filters.CharFilter(label='Creator')
     collector = filters.CharFilter(label='Collector')
     collection = filters.CharFilter(label='Collection')
+    collection_id = filters.CharFilter(label='Collection ID')
     genre = filters.CharFilter(label='Genre')
     type = filters.CharFilter(label='Type')
     subject = filters.CharFilter(label='Subject')
@@ -81,6 +82,7 @@ class RecordList(ListAPIView):
         filters = self._set_filter(request, 'creator', filters)
         filters = self._set_filter(request, 'collector', filters)
         filters = self._set_filter(request, 'collection', filters)
+        filters = self._set_filter(request, 'collection_id', filters)
         filters = self._set_filter(request, 'genre', filters)
         filters = self._set_filter(request, 'type', filters)
         filters = self._set_filter(request, 'subject', filters)
@@ -117,7 +119,7 @@ class RecordList(ListAPIView):
             'facet': True,
             'facet_fields': [
                 'record_origin_facet', 'description_level_facet', 'language_facet',
-                'city_facet', 'creator_facet', 'collector_facet',
+                'city_facet', 'creator_facet', 'collector_facet', 'collection_id_facet',
                 'collection_facet', 'genre_facet',
                 'type_facet', 'subject_facet', 'subject_person_facet'
             ],

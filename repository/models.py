@@ -9,6 +9,7 @@ class Collection(models.Model):
     year_end = models.IntegerField(verbose_name='Year End', blank=True, null=True)
     archival_reference_code = models.CharField(verbose_name='Archival Reference Code', max_length=100, blank=True, null=True)
     catalog_url = models.CharField(verbose_name='Catalog URL', max_length=500, blank=True, null=True)
+    thumbnail = models.CharField(verbose_name='Thumbnail', max_length=200, blank=True, null=True)
 
     def __str__(self):
         return "%s %s" % (self.archival_reference_code, self.title)
@@ -68,6 +69,7 @@ class RecordMedia(models.Model):
     id = models.AutoField(primary_key=True)
     record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_media_files')
     file = models.CharField(verbose_name='Media File', max_length=200, blank=True, null=True)
+    mimetype = models.CharField(verbose_name='Media File MIME Type', max_length=100, blank=True, null=True)
 
     class Meta:
         db_table = 'record_media_files'
@@ -79,6 +81,7 @@ class RecordThumbnail(models.Model):
     id = models.AutoField(primary_key=True)
     record = models.ForeignKey('Record', on_delete=models.CASCADE, related_name='record_thumbnails')
     thumbnail = models.CharField(verbose_name='Thumbnail', max_length=200, blank=True, null=True)
+    mimetype = models.CharField(verbose_name='Media File MIME Type', max_length=100, blank=True, null=True)
 
     class Meta:
         db_table = 'record_thumbnails'
