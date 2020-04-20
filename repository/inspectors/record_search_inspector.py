@@ -15,6 +15,11 @@ class RecordSearchInspector(CoreAPICompatInspector):
                 'score', '-score'
             ]
         },
+        'requestType': {
+            'description': 'Choose between the simple resultset response or geo coordinates response.',
+            'type': 'string',
+            'enum': ['', 'map']
+        },
         'cursorMark': {
             'description': 'Only submit it if there is a valid cursor in the response from Solr.',
             'type': 'string'

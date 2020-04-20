@@ -27,6 +27,7 @@ class RecordDetail(generics.RetrieveAPIView):
 
 class RecordFilterClass(filters.FilterSet):
     cursorMark = filters.CharFilter(label='Cursor')
+    requestType = filters.CharFilter(label='Request Type')
     query = filters.CharFilter(label='Search')
     ordering = OrderingFilter(fields=(('score', 'score'),))
 
