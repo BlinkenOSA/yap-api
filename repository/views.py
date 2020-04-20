@@ -63,6 +63,8 @@ class RecordList(ListAPIView):
     def list(self, request, *args, **kwargs):
         filters = []
         date_filters = []
+
+        request_type = request.query_params.get('requestType', 'simple')
         cursor_mark = request.query_params.get('cursorMark', '*')
 
         qf = [
@@ -132,7 +134,10 @@ class RecordList(ListAPIView):
         searcher.initialize(params, tie_breaker='id asc')
 
         try:
-            response = searcher.search(cursor_mark=cursor_mark)
+            if request_type == 'map':
+                response = searcher.map_search()
+            else:
+                response = searcher.search(cursor_mark=cursor_mark)
         except SolrError as e:
             return Response(status=HTTP_400_BAD_REQUEST, data={'error': str(e)})
 

@@ -1,3 +1,5 @@
+import json
+
 import pysolr
 from django.conf import settings
 
@@ -31,6 +33,7 @@ class RecordIndexer:
             # Facet fields
             'language_facet': [],
             'city_facet': [],
+            'geo_facet': [],
             'creator_facet': [],
             'collector_facet': [],
             'genre_facet': [],
@@ -77,9 +80,11 @@ class RecordIndexer:
             self.doc['type'].append(type.type)
 
         for city in self.record.spatial_coverage.all():
+            # Index cities
             self.doc['city'].append(city.city)
             if city.latitude and city.longitude:
                 self.doc['geo_search'].append("%s,%s" % (city.latitude, city.longitude))
+                self.doc['geo_facet'].append("%s,%s" % (city.latitude, city.longitude))
 
         # Sort
         self.doc['archival_reference_number_sort'] = "%04d%04d%04d%04d%04d" % (self.record.fonds,
