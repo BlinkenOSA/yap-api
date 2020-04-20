@@ -10,6 +10,7 @@ class Searcher:
     def __init__(self, solr_core):
         self.solr_url = "%s/%s" % (getattr(settings, "SOLR_URL", "http://localhost:8983/solr"), solr_core)
         self.solr = pysolr.Solr(self.solr_url)
+
         self.q = {}
         self.fq = []
         self.sort = ""
@@ -74,6 +75,26 @@ class Searcher:
             sort=self.sort,
             facet=self.facet,
             cursorMark=cursor_mark,
+            **search_kwargs
+        )
+
+    def map_search(self):
+        search_kwargs = {
+            'defType': 'edismax',
+            'qf': self.qf,
+            'fq': self.fq,
+            'fl': 'fl',
+            'q.op': 'AND',
+            'facet.field': 'geo_facet',
+            'facet.sort': self.facet_sort,
+            'facet.limit': -1,
+            'facet.mincount': 1,
+            'rows': 0,
+        }
+        return self.solr.search(
+            q=self.q,
+            sort=self.sort,
+            facet=self.facet,
             **search_kwargs
         )
 
