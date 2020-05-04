@@ -180,9 +180,11 @@ class CollectionAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'catalog_url', 'thumbnail')
     list_editable = ('description', 'catalog_url', 'thumbnail')
 
+
 class CityAdmin(admin.ModelAdmin):
     list_display = ('id', 'city', 'latitude', 'longitude')
     list_editable = ('city', 'latitude', 'longitude')
+
 
 admin.site.register(Record, RecordAdmin)
 admin.site.register(Collection, CollectionAdmin)
