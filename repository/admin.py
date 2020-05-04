@@ -177,8 +177,8 @@ class RecordAdmin(admin.ModelAdmin):
 
 
 class CollectionAdmin(admin.ModelAdmin):
-    pass
-
+    list_display = ('title', 'description', 'catalog_url', 'thumbnail')
+    list_editable = ('description', 'catalog_url', 'thumbnail')
 
 class CityAdmin(admin.ModelAdmin):
     list_display = ('id', 'city', 'latitude', 'longitude')
