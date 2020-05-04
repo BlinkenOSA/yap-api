@@ -7,6 +7,7 @@ class Collection(models.Model):
     title = models.CharField(verbose_name='Title', max_length=500)
     year_start = models.IntegerField(verbose_name='Year Start', blank=True, null=True)
     year_end = models.IntegerField(verbose_name='Year End', blank=True, null=True)
+    description = models.TextField(verbose_name='Description', blank=True, null=True)
     archival_reference_code = models.CharField(verbose_name='Archival Reference Code', max_length=100, blank=True, null=True)
     catalog_url = models.CharField(verbose_name='Catalog URL', max_length=500, blank=True, null=True)
     thumbnail = models.CharField(verbose_name='Thumbnail', max_length=200, blank=True, null=True)
