@@ -2,7 +2,6 @@ import re
 
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
-from pysolr import SolrError
 from rest_framework import generics
 from rest_framework.generics import ListAPIView
 from django_filters import rest_framework as filters, OrderingFilter
@@ -66,7 +65,14 @@ class RecordList(ListAPIView):
         date_filters = []
 
         request_type = request.query_params.get('requestType', 'simple')
-        cursor_mark = request.query_params.get('cursorMark', '*')
+
+        limit = request.query_params.get('limit', 10)
+        if limit == '':
+            limit = 10
+
+        offset = request.query_params.get('offset', 0)
+        if offset == '':
+            offset = 0
 
         qf = [
             'title_original_search^5.0',
@@ -92,16 +98,16 @@ class RecordList(ListAPIView):
         filters = self._set_filter(request, 'subject_person', filters)
 
         year_from = request.query_params.get('year_coverage_start', None)
-        year_to = request.query_params.get('year_coverage_to', None)
+        year_to = request.query_params.get('year_coverage_end', None)
 
         # Date coverage
         try:
-            if year_from:
+            if year_from and year_to:
+                if re.match(r'.*([1-3][0-9]{3})', year_from) and re.match(r'.*([1-3][0-9]{3})', year_to):
+                    date_filters.append({'temporal_coverage_search': '[%s TO %s]' % (year_from, year_to)})
+            if year_from and not year_to:
                 if re.match(r'.*([1-3][0-9]{3})', year_from):
-                    date_filters.append({'year_coverage_start': '[* TO %s]' % year_from})
-            if year_to:
-                if re.match(r'.*([1-3][0-9]{3})', year_to):
-                    date_filters.append({'year_coverage_to': '[%s TO *]' % year_to})
+                    date_filters.append({'temporal_coverage_search': '[%s TO %s]' % (year_from, year_from)})
         except ValueError:
             pass
 
@@ -124,7 +130,8 @@ class RecordList(ListAPIView):
                 'record_origin_facet', 'description_level_facet', 'language_facet',
                 'city_facet', 'creator_facet', 'collector_facet', 'collection_id_facet',
                 'collection_facet', 'genre_facet',
-                'type_facet', 'subject_facet', 'subject_person_facet'
+                'type_facet', 'subject_facet', 'subject_person_facet',
+                'temporal_coverage_facet'
             ],
             'facet_sort': 'count',
             'filters': filters,
@@ -132,27 +139,36 @@ class RecordList(ListAPIView):
         }
 
         searcher = Searcher(self.core)
-        searcher.initialize(params, tie_breaker='id asc')
+        searcher.initialize(params, start=offset, rows_per_page=limit, tie_breaker='id asc')
 
         try:
             if request_type == 'map':
                 response = searcher.map_search()
             else:
-                response = searcher.search(cursor_mark=cursor_mark)
-        except SolrError as e:
+                response = searcher.search()
+        except Exception as e:
             return Response(status=HTTP_400_BAD_REQUEST, data={'error': str(e)})
 
         resp = {
             'count': response.hits,
             'results': response.docs,
             'facets': response.facets,
-            'nextCursorMark': response.nextCursorMark
         }
+
+        if (int(limit) + int(offset)) < int(response.hits):
+            resp['next'] = True
 
         return Response(resp)
 
     def _set_filter(self, request, field_name, filters):
-        f_param = request.query_params.get(field_name, None)
-        if f_param:
-            filters.append({'%s_facet' % field_name: f_param})
+        f_param = request.query_params.getlist('%s' % field_name, None)
+        if len(f_param) > 0:
+            for fp in f_param:
+                filters.append({'%s_facet' % field_name: fp})
+
+        f_param = request.query_params.getlist('%s[]' % field_name, None)
+        if len(f_param) > 0:
+            for fp in f_param:
+                filters.append({'%s_facet' % field_name: fp})
+
         return filters
