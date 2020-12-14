@@ -29,6 +29,7 @@ class RecordIndexer:
             'subject_person_search': [],
             'city_search': [],
             'geo_search': [],
+            'temporal_coverage_search': "",
 
             # Facet fields
             'language_facet': [],
@@ -39,7 +40,9 @@ class RecordIndexer:
             'genre_facet': [],
             'type_facet': [],
             'subject_facet': [],
-            'subject_person_facet': []
+            'subject_person_facet': [],
+            'date_of_creation_facet': [],
+            'temporal_coverage_facet': []
         }
 
     def index(self):
@@ -108,6 +111,16 @@ class RecordIndexer:
 
         self.doc['year_coverage_start'] = self.record.temporal_coverage_start
         self.doc['year_coverage_end'] = self.record.temporal_coverage_end
+
+        # Date facets
+        if self.record.temporal_coverage_end:
+            self.doc['temporal_coverage_search'] = \
+                "[%s TO %s]" % (self.record.temporal_coverage_start, self.record.temporal_coverage_end)
+            for year in range(self.record.temporal_coverage_start, self.record.temporal_coverage_end):
+                self.doc['temporal_coverage_facet'].append(year)
+        else:
+            self.doc['temporal_coverage_search'] = self.record.temporal_coverage_start
+            self.doc['temporal_coverage_facet'].append(self.record.temporal_coverage_end)
 
         if self.record.collection:
             self.doc['collection_id_facet'] = self.record.collection.id
