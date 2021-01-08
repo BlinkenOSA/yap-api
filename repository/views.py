@@ -59,12 +59,13 @@ class RecordList(ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = RecordFilterClass
     core = "yap"
+    request_type = "simple"
 
     def list(self, request, *args, **kwargs):
         filters = []
         date_filters = []
 
-        request_type = request.query_params.get('requestType', 'simple')
+        request_type = self.request_type
 
         limit = request.query_params.get('limit', 10)
         if limit == '':
@@ -172,3 +173,12 @@ class RecordList(ListAPIView):
                 filters.append({'%s_facet' % field_name: fp})
 
         return filters
+
+
+class RecordMapList(RecordList):
+    queryset = Record.objects.all()
+    pagination_class = None
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = RecordFilterClass
+    core = "yap"
+    request_type = 'map'

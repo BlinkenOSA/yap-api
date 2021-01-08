@@ -87,7 +87,13 @@ class RecordIndexer:
             self.doc['city'].append(city.city)
             if city.latitude and city.longitude:
                 self.doc['geo_search'].append("%s,%s" % (city.latitude, city.longitude))
-                self.doc['geo_facet'].append("%s,%s" % (city.latitude, city.longitude))
+                self.doc['geo_facet'].append(
+                    json.dumps({
+                        'city': city.city,
+                        'lat': city.latitude,
+                        'long': city.longitude
+                    })
+                )
 
         # Sort
         self.doc['archival_reference_number_sort'] = "%04d%04d%04d%04d%04d" % (self.record.fonds,

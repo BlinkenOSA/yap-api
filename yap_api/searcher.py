@@ -69,7 +69,7 @@ class Searcher:
             'facet.field': self.facet_fields,
             'facet.sort': self.facet_sort,
             'facet.limit': -1,
-            'facet.mincount': 1
+            'facet.mincount': 1,
         }
         return self.solr.search(
             q=self.q,
@@ -95,7 +95,6 @@ class Searcher:
             'facet.sort': self.facet_sort,
             'facet.limit': -1,
             'facet.mincount': 1,
-            'rows': 0,
         }
         return self.solr.search(
             q=self.q,
