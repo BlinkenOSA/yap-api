@@ -21,6 +21,9 @@ class RecordIndexer:
             'genre': [],
             'type': [],
             'city': [],
+            'language': [],
+            'record_origin': '',
+            'catalog_url': '',
             'thumbnails': [],
 
             # Search fields
@@ -95,6 +98,13 @@ class RecordIndexer:
                     })
                 )
 
+        for lang in self.record.languages.all():
+            self.doc['language'].append(lang.language)
+            self.doc['language_facet'].append(lang.language)
+
+        self.doc['collection_url'] = self.record.collection.catalog_url
+        self.doc['collection'] = self.record.collection
+
         # Sort
         self.doc['archival_reference_number_sort'] = "%04d%04d%04d%04d%04d" % (self.record.fonds,
                                                                                self.record.subfonds,
@@ -110,10 +120,10 @@ class RecordIndexer:
         self.doc['city_search'] = self.doc['city']
 
         for subject in self.record.record_subjects.all():
-            self.doc['subject_search'] = subject.subject
+            self.doc['subject_search'].append(subject.subject)
 
         for subject in self.record.record_subject_people.all():
-            self.doc['subject_person_search'] = subject.subject_person
+            self.doc['subject_person_search'].append(subject.subject_person)
 
         self.doc['year_coverage_start'] = self.record.temporal_coverage_start
         self.doc['year_coverage_end'] = self.record.temporal_coverage_end

@@ -124,8 +124,7 @@ class RecordList(ListAPIView):
             'qf': qf,
             'fl': 'id,archival_reference_number,title_original,title_english,'
                   'date_of_creation_start,date_of_creation_end,'
-                  'temporal_coverage_start,temporal_coverage_end,'
-                  'description,genre,type,city,thumbnails',
+                  'type,language,thumbnails,collection,collection_url',
             'facet': True,
             'facet_fields': [
                 'record_origin_facet', 'description_level_facet', 'language_facet',
@@ -134,6 +133,9 @@ class RecordList(ListAPIView):
                 'type_facet', 'subject_facet', 'subject_person_facet',
                 'temporal_coverage_facet'
             ],
+            'hl': 'on',
+            'hl.fl': 'title_english_search,title_original_search,description_search,'
+                     'subject_search,subject_person_search,city_search',
             'facet_sort': 'count',
             'filters': filters,
             'date_filters': date_filters
@@ -154,6 +156,7 @@ class RecordList(ListAPIView):
             'count': response.hits,
             'results': response.docs,
             'facets': response.facets,
+            'highlights': response.highlighting
         }
 
         if (int(limit) + int(offset)) < int(response.hits):
