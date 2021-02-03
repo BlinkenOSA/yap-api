@@ -17,6 +17,7 @@ from yap_api.searcher import Searcher
 class CollectionList(generics.ListAPIView):
     queryset = Collection.objects.all()
     serializer_class = CollectionSerializer
+    pagination_class = None
 
 
 class RecordDetail(generics.RetrieveAPIView):
