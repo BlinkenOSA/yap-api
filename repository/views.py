@@ -15,7 +15,7 @@ from yap_api.searcher import Searcher
 
 
 class CollectionList(generics.ListAPIView):
-    queryset = Collection.objects.all()
+    queryset = Collection.objects.all().order_by('-id')
     serializer_class = CollectionSerializer
     pagination_class = None
 
