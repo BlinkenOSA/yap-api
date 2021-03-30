@@ -92,10 +92,6 @@ class Searcher:
             **search_kwargs
         )
 
-    def do_search(self):
-        r = requests.get(self.solr_url, data={'query': self.q})
-        print ('a')
-
     def map_search(self):
         search_kwargs = {
             'defType': 'edismax',
