@@ -106,11 +106,16 @@ class RecordIndexer:
         self.doc['collection'] = self.record.collection
 
         # Sort
-        self.doc['archival_reference_number_sort'] = "%04d%04d%04d%04d%04d" % (self.record.fonds,
-                                                                               self.record.subfonds,
-                                                                               self.record.series,
-                                                                               self.record.container_no,
-                                                                               self.record.sequence_no)
+        if self.record.fonds:
+            self.doc['archival_reference_number_sort'] = "%04d00000000%04d%04d" % (self.record.fonds, self.record.container_no, self.record.sequence_no)
+
+        if self.record.subfonds:
+            self.doc['archival_reference_number_sort'] = "%04d0000%04d%04d%04d" % (self.record.fonds, self.record.series, self.record.container_no, self.record.sequence_no)
+
+        if self.record.series:
+            self.doc['archival_reference_number_sort'] = "%04d%04d%04d%04d%04d" % (self.record.fonds, self.record.subfonds, self.record.series, self.record.container_no, self.record.sequence_no)
+
+
         self.doc['title_english_sort'] = self.doc['title_english']
         self.doc['coverage_start_sort'] = self.record.temporal_coverage_start
 
