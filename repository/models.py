@@ -11,6 +11,7 @@ class Collection(models.Model):
     archival_reference_code = models.CharField(verbose_name='Archival Reference Code', max_length=100, blank=True, null=True)
     catalog_url = models.CharField(verbose_name='Catalog URL', max_length=500, blank=True, null=True)
     thumbnail = models.CharField(verbose_name='Thumbnail', max_length=200, blank=True, null=True)
+    sort_index = models.IntegerField(blank=True, null=True)
 
     def __str__(self):
         return "%s %s" % (self.archival_reference_code, self.title)
