@@ -3,7 +3,7 @@ from django.contrib import admin
 from django.forms import TextInput
 
 from repository.models import Record, RecordThumbnail, RecordMedia, RecordDescription, City, Collection, RecordSubject, \
-    RecordSubjectPerson, RecordCreator, RecordCollector
+    RecordSubjectPerson, RecordCreator, RecordCollector, Type, Genre
 
 
 class RecordSubjectInline(admin.TabularInline):
@@ -186,7 +186,19 @@ class CityAdmin(admin.ModelAdmin):
     list_editable = ('city', 'latitude', 'longitude')
 
 
+class TypeAdmin(admin.ModelAdmin):
+    list_display = ('id', 'type')
+    list_editable = ('type',)
+
+
+class GenreAdmin(admin.ModelAdmin):
+    list_display = ('id', 'genre')
+    list_editable = ('genre',)
+
+
 admin.site.register(Record, RecordAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(City, CityAdmin)
+admin.site.register(Type, TypeAdmin)
+admin.site.register(Genre, GenreAdmin)
 
