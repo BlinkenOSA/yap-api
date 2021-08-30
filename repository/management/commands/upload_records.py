@@ -121,7 +121,7 @@ class Command(BaseCommand):
 
                 if row['Geo Coordinates'] != '':
                     # Spatial Coverage
-                    city, created = City.objects.get_or_create(city=row['Spatial Coverage3'])
+                    city, created = City.objects.get_or_create(city=row['Spatial Coverage3'].strip())
                     geo = row['Geo Coordinates'].split(",")
                     city.latitude = float(geo[0])
                     city.longitude = float(geo[1])
