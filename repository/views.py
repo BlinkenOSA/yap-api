@@ -125,7 +125,7 @@ class RecordList(ListAPIView):
             'qf': qf,
             'fl': 'id,archival_reference_number,title_original,title_english,'
                   'date_of_creation_start,date_of_creation_end,'
-                  'type,language,thumbnails,collection,collection_url',
+                  'genre,type,language,thumbnails,collection,collection_url',
             'facet': True,
             'facet_fields': [
                 'record_origin_facet', 'description_level_facet', 'language_facet',
