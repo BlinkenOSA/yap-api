@@ -61,6 +61,14 @@ class RecordList(ListAPIView):
     filter_class = RecordFilterClass
     core = "yap"
     request_type = "simple"
+    qf = [
+        'description_search^1000',
+        'title_original_search^500',
+        'title_english_search^500',
+        'subject_search^250',
+        'subject_person_search^150',
+        'city_search^150'
+    ]
 
     def list(self, request, *args, **kwargs):
         filters = []
@@ -75,15 +83,6 @@ class RecordList(ListAPIView):
         offset = request.query_params.get('offset', 0)
         if offset == '':
             offset = 0
-
-        qf = [
-            'title_original_search^5.0',
-            'title_english_search^5.0',
-            'description_search^2.5',
-            'subject_search^2.5',
-            'subject_person_search^1.5',
-            'city_search^1.5'
-        ]
 
         # Facets
         filters = self._set_filter(request, 'record_origin', filters)
@@ -122,7 +121,7 @@ class RecordList(ListAPIView):
         params = {
             'search': request.query_params.get('query', ''),
             'ordering': request.query_params.get('ordering', '-score'),
-            'qf': qf,
+            'qf': self.qf,
             'fl': 'id,archival_reference_number,title_original,title_english,'
                   'date_of_creation_start,date_of_creation_end,'
                   'genre,type,language,thumbnails,collection,collection_url',
@@ -186,3 +185,28 @@ class RecordMapList(RecordList):
     filter_class = RecordFilterClass
     core = "yap"
     request_type = 'map'
+
+
+class RecordMapListFirst(RecordList):
+    queryset = Record.objects.all()
+    pagination_class = None
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = RecordFilterClass
+    core = "yap"
+    request_type = 'map'
+    qf = [
+        'description_search^250',
+    ]
+
+
+class RecordMapListSecond(RecordList):
+    queryset = Record.objects.all()
+    pagination_class = None
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = RecordFilterClass
+    core = "yap"
+    request_type = 'map'
+    qf = [
+        'subject_search^250',
+        'subject_person_search^150'
+    ]
