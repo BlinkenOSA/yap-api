@@ -23,12 +23,14 @@ class Searcher:
         self.tie_breaker = ""
         self.facet = True
         self.facet_fields = []
+        self.paginated = True
         self.facet_sort = 'count'
 
-    def initialize(self, params, start=0, rows_per_page=10, tie_breaker=""):
+    def initialize(self, params, start=0, rows_per_page=10, tie_breaker="", paginated=True):
         self.start = start
         self.rows_per_page = rows_per_page
         self.tie_breaker = tie_breaker
+        self.paginated = paginated
 
         search = params.get('search', '*:*')
         self.set_q(search)
@@ -82,14 +84,41 @@ class Searcher:
             'facet.limit': -1,
             'facet.mincount': 1,
         }
-        return self.solr.search(
-            q=self.q,
-            sort=self.sort,
-            facet=self.facet,
-            rows=self.rows_per_page,
-            start=self.start,
-            **search_kwargs
-        )
+        if self.paginated:
+            return self.solr.search(
+                q=self.q,
+                sort=self.sort,
+                facet=self.facet,
+                rows=self.rows_per_page,
+                start=self.start,
+                **search_kwargs
+            )
+        else:
+            results = {
+                'hits': 0,
+                'docs': [],
+                'facets': {},
+                'highlighting': {}
+            }
+            while cursor_mark:
+                search = self.solr.search(
+                    q=self.q,
+                    sort=self.sort,
+                    facet=self.facet,
+                    cursorMark=cursor_mark,
+                    **search_kwargs
+                )
+                results['hits'] = search.hits,
+                results['facets'] = search.facets,
+                results['highlighting'] = search.highlighting
+                results['docs'] += search.docs
+
+                if cursor_mark != search.nextCursorMark:
+                    cursor_mark = search.nextCursorMark
+                else:
+                    cursor_mark = False
+
+            return results
 
     def map_search(self):
         search_kwargs = {

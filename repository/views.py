@@ -80,6 +80,9 @@ class RecordList(ListAPIView):
         if limit == '':
             limit = 10
 
+        if request_type != 'simple':
+            limit = -1
+
         offset = request.query_params.get('offset', 0)
         if offset == '':
             offset = 0
@@ -142,7 +145,11 @@ class RecordList(ListAPIView):
         }
 
         searcher = Searcher(self.core)
-        searcher.initialize(params, start=offset, rows_per_page=limit, tie_breaker='id asc')
+
+        if request_type == 'all':
+            searcher.initialize(params, start=offset, rows_per_page=limit, tie_breaker='id asc', paginated=False)
+        else:
+            searcher.initialize(params, start=offset, rows_per_page=limit, tie_breaker='id asc')
 
         try:
             if request_type == 'map':
@@ -152,15 +159,23 @@ class RecordList(ListAPIView):
         except Exception as e:
             return Response(status=HTTP_400_BAD_REQUEST, data={'error': str(e)})
 
-        resp = {
-            'count': response.hits,
-            'results': response.docs,
-            'facets': response.facets,
-            'highlights': response.highlighting
-        }
+        if request_type == 'all':
+            resp = {
+                'count': response['hits'],
+                'results': response['docs'],
+                'facets': response['facets'],
+                'highlights': response['highlighting']
+            }
+        else:
+            resp = {
+                'count': response.hits,
+                'results': response.docs,
+                'facets': response.facets,
+                'highlights': response.highlighting
+            }
 
-        if (int(limit) + int(offset)) < int(response.hits):
-            resp['next'] = True
+            if (int(limit) + int(offset)) < int(response.hits):
+                resp['next'] = True
 
         return Response(resp)
 
@@ -187,26 +202,10 @@ class RecordMapList(RecordList):
     request_type = 'map'
 
 
-class RecordMapListFirst(RecordList):
+class RecordListAll(RecordList):
     queryset = Record.objects.all()
     pagination_class = None
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = RecordFilterClass
     core = "yap"
-    request_type = 'map'
-    qf = [
-        'description_search^250',
-    ]
-
-
-class RecordMapListSecond(RecordList):
-    queryset = Record.objects.all()
-    pagination_class = None
-    filter_backends = (filters.DjangoFilterBackend,)
-    filter_class = RecordFilterClass
-    core = "yap"
-    request_type = 'map'
-    qf = [
-        'subject_search^250',
-        'subject_person_search^150'
-    ]
+    request_type = 'all'
