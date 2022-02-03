@@ -131,8 +131,8 @@ class RecordSubject(models.Model):
 
     class Meta:
         db_table = 'record_subjects'
-        verbose_name = 'subject'
-        verbose_name_plural = 'subjects'
+        verbose_name = 'keyword'
+        verbose_name_plural = 'keywords'
 
 
 class RecordSubjectPerson(models.Model):

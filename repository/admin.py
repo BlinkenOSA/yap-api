@@ -196,9 +196,16 @@ class GenreAdmin(admin.ModelAdmin):
     list_editable = ('genre',)
 
 
+class RecordSubjectAdmin(admin.ModelAdmin):
+    list_display = ('record', 'subject')
+    list_editable = ('subject',)
+    ordering = ('subject',)
+    list_filter = ('subject',)
+
+
 admin.site.register(Record, RecordAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(City, CityAdmin)
 admin.site.register(Type, TypeAdmin)
 admin.site.register(Genre, GenreAdmin)
-
+admin.site.register(RecordSubject, RecordSubjectAdmin)
