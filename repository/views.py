@@ -209,3 +209,12 @@ class RecordListAll(RecordList):
     filter_class = RecordFilterClass
     core = "yap"
     request_type = 'all'
+
+
+class RecordExport(ListAPIView):
+    queryset = Record.objects.all()
+    serializer_class = RecordSerializer
+
+    def get_queryset(self):
+        collection = self.kwargs.get('collection_id', '0')
+        return Record.objects.filter(collection__id=collection)
