@@ -2,7 +2,6 @@ import re
 
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
-from pysolr import SolrError
 from rest_framework import generics
 from rest_framework.generics import ListAPIView
 from django_filters import rest_framework as filters, OrderingFilter
@@ -16,8 +15,9 @@ from yap_api.searcher import Searcher
 
 
 class CollectionList(generics.ListAPIView):
-    queryset = Collection.objects.all()
+    queryset = Collection.objects.all().order_by('-id')
     serializer_class = CollectionSerializer
+    pagination_class = None
 
 
 class RecordDetail(generics.RetrieveAPIView):
@@ -27,6 +27,7 @@ class RecordDetail(generics.RetrieveAPIView):
 
 class RecordFilterClass(filters.FilterSet):
     cursorMark = filters.CharFilter(label='Cursor')
+    requestType = filters.CharFilter(label='Request Type')
     query = filters.CharFilter(label='Search')
     ordering = OrderingFilter(fields=(('score', 'score'),))
 
@@ -37,6 +38,7 @@ class RecordFilterClass(filters.FilterSet):
     creator = filters.CharFilter(label='Creator')
     collector = filters.CharFilter(label='Collector')
     collection = filters.CharFilter(label='Collection')
+    collection_id = filters.CharFilter(label='Collection ID')
     genre = filters.CharFilter(label='Genre')
     type = filters.CharFilter(label='Type')
     subject = filters.CharFilter(label='Subject')
@@ -58,20 +60,32 @@ class RecordList(ListAPIView):
     filter_backends = (filters.DjangoFilterBackend,)
     filter_class = RecordFilterClass
     core = "yap"
+    request_type = "simple"
+    qf = [
+        'description_search^1000',
+        'title_original_search^500',
+        'title_english_search^500',
+        'subject_search^250',
+        'subject_person_search^150',
+        'city_search^150'
+    ]
 
     def list(self, request, *args, **kwargs):
         filters = []
         date_filters = []
-        cursor_mark = request.query_params.get('cursorMark', '*')
 
-        qf = [
-            'title_original_search^5.0',
-            'title_english_search^5.0',
-            'description_search^2.5',
-            'subject_search^2.5',
-            'subject_person_search^1.5',
-            'city_search^1.5'
-        ]
+        request_type = self.request_type
+
+        limit = request.query_params.get('limit', 10)
+        if limit == '':
+            limit = 10
+
+        if request_type != 'simple':
+            limit = -1
+
+        offset = request.query_params.get('offset', 0)
+        if offset == '':
+            offset = 0
 
         # Facets
         filters = self._set_filter(request, 'record_origin', filters)
@@ -81,22 +95,23 @@ class RecordList(ListAPIView):
         filters = self._set_filter(request, 'creator', filters)
         filters = self._set_filter(request, 'collector', filters)
         filters = self._set_filter(request, 'collection', filters)
+        filters = self._set_filter(request, 'collection_id', filters)
         filters = self._set_filter(request, 'genre', filters)
         filters = self._set_filter(request, 'type', filters)
         filters = self._set_filter(request, 'subject', filters)
         filters = self._set_filter(request, 'subject_person', filters)
 
         year_from = request.query_params.get('year_coverage_start', None)
-        year_to = request.query_params.get('year_coverage_to', None)
+        year_to = request.query_params.get('year_coverage_end', None)
 
         # Date coverage
         try:
-            if year_from:
+            if year_from and year_to:
+                if re.match(r'.*([1-3][0-9]{3})', year_from) and re.match(r'.*([1-3][0-9]{3})', year_to):
+                    date_filters.append({'temporal_coverage_search': '[%s TO %s]' % (year_from, year_to)})
+            if year_from and not year_to:
                 if re.match(r'.*([1-3][0-9]{3})', year_from):
-                    date_filters.append({'year_coverage_start': '[* TO %s]' % year_from})
-            if year_to:
-                if re.match(r'.*([1-3][0-9]{3})', year_to):
-                    date_filters.append({'year_coverage_to': '[%s TO *]' % year_to})
+                    date_filters.append({'temporal_coverage_search': '[%s TO %s]' % (year_from, year_from)})
         except ValueError:
             pass
 
@@ -109,42 +124,97 @@ class RecordList(ListAPIView):
         params = {
             'search': request.query_params.get('query', ''),
             'ordering': request.query_params.get('ordering', '-score'),
-            'qf': qf,
+            'qf': self.qf,
             'fl': 'id,archival_reference_number,title_original,title_english,'
                   'date_of_creation_start,date_of_creation_end,'
-                  'temporal_coverage_start,temporal_coverage_end,'
-                  'description,genre,type,city,thumbnails',
+                  'genre,type,language,thumbnails,collection,collection_url',
             'facet': True,
             'facet_fields': [
                 'record_origin_facet', 'description_level_facet', 'language_facet',
-                'city_facet', 'creator_facet', 'collector_facet',
+                'city_facet', 'creator_facet', 'collector_facet', 'collection_id_facet',
                 'collection_facet', 'genre_facet',
-                'type_facet', 'subject_facet', 'subject_person_facet'
+                'type_facet', 'subject_facet', 'subject_person_facet',
+                'temporal_coverage_facet'
             ],
+            'hl': 'on',
+            'hl.fl': 'title_english_search,title_original_search,description_search,'
+                     'subject_search,subject_person_search,city_search',
             'facet_sort': 'count',
             'filters': filters,
             'date_filters': date_filters
         }
 
         searcher = Searcher(self.core)
-        searcher.initialize(params, tie_breaker='id asc')
+
+        if request_type == 'all':
+            searcher.initialize(params, start=offset, rows_per_page=limit, tie_breaker='id asc', paginated=False)
+        else:
+            searcher.initialize(params, start=offset, rows_per_page=limit, tie_breaker='id asc')
 
         try:
-            response = searcher.search(cursor_mark=cursor_mark)
-        except SolrError as e:
+            if request_type == 'map':
+                response = searcher.map_search()
+            else:
+                response = searcher.search()
+        except Exception as e:
             return Response(status=HTTP_400_BAD_REQUEST, data={'error': str(e)})
 
-        resp = {
-            'count': response.hits,
-            'results': response.docs,
-            'facets': response.facets,
-            'nextCursorMark': response.nextCursorMark
-        }
+        if request_type == 'all':
+            resp = {
+                'count': response['hits'],
+                'results': response['docs'],
+                'facets': response['facets'],
+                'highlights': response['highlighting']
+            }
+        else:
+            resp = {
+                'count': response.hits,
+                'results': response.docs,
+                'facets': response.facets,
+                'highlights': response.highlighting
+            }
+
+            if (int(limit) + int(offset)) < int(response.hits):
+                resp['next'] = True
 
         return Response(resp)
 
     def _set_filter(self, request, field_name, filters):
-        f_param = request.query_params.get(field_name, None)
-        if f_param:
-            filters.append({'%s_facet' % field_name: f_param})
+        f_param = request.query_params.getlist('%s' % field_name, None)
+        if len(f_param) > 0:
+            for fp in f_param:
+                filters.append({'%s_facet' % field_name: fp})
+
+        f_param = request.query_params.getlist('%s[]' % field_name, None)
+        if len(f_param) > 0:
+            for fp in f_param:
+                filters.append({'%s_facet' % field_name: fp})
+
         return filters
+
+
+class RecordMapList(RecordList):
+    queryset = Record.objects.all()
+    pagination_class = None
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = RecordFilterClass
+    core = "yap"
+    request_type = 'map'
+
+
+class RecordListAll(RecordList):
+    queryset = Record.objects.all()
+    pagination_class = None
+    filter_backends = (filters.DjangoFilterBackend,)
+    filter_class = RecordFilterClass
+    core = "yap"
+    request_type = 'all'
+
+
+class RecordExport(ListAPIView):
+    queryset = Record.objects.all()
+    serializer_class = RecordSerializer
+
+    def get_queryset(self):
+        collection = self.kwargs.get('collection_id', '0')
+        return Record.objects.filter(collection__id=collection)

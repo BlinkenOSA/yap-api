@@ -1,3 +1,5 @@
+import json
+
 import pysolr
 from django.conf import settings
 
@@ -19,6 +21,9 @@ class RecordIndexer:
             'genre': [],
             'type': [],
             'city': [],
+            'language': [],
+            'record_origin': '',
+            'catalog_url': '',
             'thumbnails': [],
 
             # Search fields
@@ -27,16 +32,20 @@ class RecordIndexer:
             'subject_person_search': [],
             'city_search': [],
             'geo_search': [],
+            'temporal_coverage_search': "",
 
             # Facet fields
             'language_facet': [],
             'city_facet': [],
+            'geo_facet': [],
             'creator_facet': [],
             'collector_facet': [],
             'genre_facet': [],
             'type_facet': [],
             'subject_facet': [],
-            'subject_person_facet': []
+            'subject_person_facet': [],
+            'date_of_creation_facet': [],
+            'temporal_coverage_facet': []
         }
 
     def index(self):
@@ -77,16 +86,35 @@ class RecordIndexer:
             self.doc['type'].append(type.type)
 
         for city in self.record.spatial_coverage.all():
+            # Index cities
             self.doc['city'].append(city.city)
             if city.latitude and city.longitude:
                 self.doc['geo_search'].append("%s,%s" % (city.latitude, city.longitude))
+                self.doc['geo_facet'].append(
+                    json.dumps({
+                        'city': city.city,
+                        'lat': city.latitude,
+                        'long': city.longitude
+                    })
+                )
+
+        for lang in self.record.languages.all():
+            self.doc['language'].append(lang.language)
+            self.doc['language_facet'].append(lang.language)
+
+        self.doc['collection_url'] = self.record.collection.catalog_url
+        self.doc['collection'] = self.record.collection
 
         # Sort
-        self.doc['archival_reference_number_sort'] = "%04d%04d%04d%04d%04d" % (self.record.fonds,
-                                                                               self.record.subfonds,
-                                                                               self.record.series,
-                                                                               self.record.container_no,
-                                                                               self.record.sequence_no)
+        if self.record.fonds:
+            self.doc['archival_reference_number_sort'] = "%04d00000000%04d%04d" % (self.record.fonds, self.record.container_no, self.record.sequence_no)
+
+        if self.record.subfonds:
+            self.doc['archival_reference_number_sort'] = "%04d0000%04d%04d%04d" % (self.record.fonds, self.record.series, self.record.container_no, self.record.sequence_no)
+
+        if self.record.series:
+            self.doc['archival_reference_number_sort'] = "%04d%04d%04d%04d%04d" % (self.record.fonds, self.record.subfonds, self.record.series, self.record.container_no, self.record.sequence_no)
+
         self.doc['title_english_sort'] = self.doc['title_english']
         self.doc['coverage_start_sort'] = self.record.temporal_coverage_start
 
@@ -96,15 +124,26 @@ class RecordIndexer:
         self.doc['city_search'] = self.doc['city']
 
         for subject in self.record.record_subjects.all():
-            self.doc['subject_search'] = subject.subject
+            self.doc['subject_search'].append(subject.subject)
 
         for subject in self.record.record_subject_people.all():
-            self.doc['subject_person_search'] = subject.subject_person
+            self.doc['subject_person_search'].append(subject.subject_person)
 
         self.doc['year_coverage_start'] = self.record.temporal_coverage_start
         self.doc['year_coverage_end'] = self.record.temporal_coverage_end
 
+        # Date facets
+        if self.record.temporal_coverage_end:
+            self.doc['temporal_coverage_search'] = \
+                "[%s TO %s]" % (self.record.temporal_coverage_start, self.record.temporal_coverage_end)
+            for year in range(self.record.temporal_coverage_start, self.record.temporal_coverage_end):
+                self.doc['temporal_coverage_facet'].append(year)
+        else:
+            self.doc['temporal_coverage_search'] = self.record.temporal_coverage_start
+            self.doc['temporal_coverage_facet'].append(self.record.temporal_coverage_end)
+
         if self.record.collection:
+            self.doc['collection_id_facet'] = self.record.collection.id
             self.doc['collection_facet'] = self.doc['collection_title']
 
         self.doc['genre_facet'] = self.doc['genre']

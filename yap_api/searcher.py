@@ -10,22 +10,27 @@ class Searcher:
     def __init__(self, solr_core):
         self.solr_url = "%s/%s" % (getattr(settings, "SOLR_URL", "http://localhost:8983/solr"), solr_core)
         self.solr = pysolr.Solr(self.solr_url)
+
         self.q = {}
         self.fq = []
         self.sort = ""
         self.qf = ""
         self.fl = ""
+        self.hl = ""
+        self.hl_fl = ""
         self.start = 0
         self.rows_per_page = 10
         self.tie_breaker = ""
         self.facet = True
         self.facet_fields = []
+        self.paginated = True
         self.facet_sort = 'count'
 
-    def initialize(self, params, start=0, rows_per_page=10, tie_breaker=""):
+    def initialize(self, params, start=0, rows_per_page=10, tie_breaker="", paginated=True):
         self.start = start
         self.rows_per_page = rows_per_page
         self.tie_breaker = tie_breaker
+        self.paginated = paginated
 
         search = params.get('search', '*:*')
         self.set_q(search)
@@ -48,6 +53,14 @@ class Searcher:
         fl = params.get('fl', '')
         self.set_fl(fl)
 
+        hl = params.get('hl', None)
+        if hl:
+            self.hl = hl
+
+        hl_fl = params.get('hl.fl', None)
+        if hl_fl:
+            self.hl_fl = hl_fl
+
         # Set faceting
         facet = params.get('facet', False)
         if facet:
@@ -64,16 +77,65 @@ class Searcher:
             'fq': self.fq,
             'fl': self.fl,
             'q.op': 'AND',
+            'hl': self.hl,
+            'hl.fl': self.hl_fl,
             'facet.field': self.facet_fields,
             'facet.sort': self.facet_sort,
             'facet.limit': -1,
-            'facet.mincount': 1
+            'facet.mincount': 1,
+        }
+        if self.paginated:
+            return self.solr.search(
+                q=self.q,
+                sort=self.sort,
+                facet=self.facet,
+                rows=self.rows_per_page,
+                start=self.start,
+                **search_kwargs
+            )
+        else:
+            results = {
+                'hits': 0,
+                'docs': [],
+                'facets': {},
+                'highlighting': {}
+            }
+            while cursor_mark:
+                search = self.solr.search(
+                    q=self.q,
+                    sort=self.sort,
+                    facet=self.facet,
+                    cursorMark=cursor_mark,
+                    **search_kwargs
+                )
+                results['hits'] = search.hits,
+                results['facets'] = search.facets,
+                results['highlighting'] = search.highlighting
+                results['docs'] += search.docs
+
+                if cursor_mark != search.nextCursorMark:
+                    cursor_mark = search.nextCursorMark
+                else:
+                    cursor_mark = False
+
+            return results
+
+    def map_search(self):
+        search_kwargs = {
+            'defType': 'edismax',
+            'qf': self.qf,
+            'fq': self.fq,
+            'fl': 'fl',
+            'q.op': 'AND',
+            'facet.field': 'geo_facet',
+            'facet.sort': self.facet_sort,
+            'facet.limit': -1,
+            'facet.mincount': 1,
         }
         return self.solr.search(
             q=self.q,
             sort=self.sort,
             facet=self.facet,
-            cursorMark=cursor_mark,
             **search_kwargs
         )
 
