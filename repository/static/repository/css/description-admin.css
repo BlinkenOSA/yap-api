@@ -1,0 +1,7 @@
+.column-description {
+    min-width: 600px !important;
+}
+
+td.field-description > textarea {
+    max-width: 580px !important;
+}
