@@ -236,22 +236,6 @@ class RecordAdmin(admin.ModelAdmin):
         }
 '''
 
-class RecordDescriptionAdmin(admin.ModelAdmin):
-    list_display = ('archival_reference_number', 'title_original', 'description')
-    list_editable = ('description',)
-    ordering = ('record__fonds', 'record__subfonds', 'record__series', 'record__container_no', 'record__sequence_no', 'id')
-
-    def archival_reference_number(self, obj):
-        return "HU OSA %s-%s-%s/%s:%s" % (obj.record.fonds, obj.record.subfonds, obj.record.series, obj.record.container_no, obj.record.sequence_no)
-
-    def title_original(self, obj):
-        return obj.record.title_original
-
-    class Media:
-        css = {
-            'all': ('repository/css/description-admin.css',)
-        }
-
 
 class CollectionAdmin(admin.ModelAdmin):
     list_display = ('title', 'description', 'catalog_url', 'thumbnail')
@@ -281,7 +265,6 @@ class RecordSubjectAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Record, RecordAdmin)
-admin.site.register(RecordDescription, RecordDescriptionAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(City, CityAdmin)
 admin.site.register(Type, TypeAdmin)
