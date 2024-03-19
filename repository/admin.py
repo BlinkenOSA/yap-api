@@ -82,6 +82,66 @@ class RecordAdmin(admin.ModelAdmin):
     ordering = ('fonds', 'subfonds', 'series', 'container_no', 'sequence_no')
     list_filter = (
         ('collection', admin.RelatedOnlyFieldListFilter),
+    )
+    inlines = [
+        RecordDescriptionInline,
+        RecordSubjectInline,
+        RecordSubjectPersonInline
+    ]
+    search_fields = ['title_original', 'title_english', 'record_descriptions__description']
+    preserve_filters = True
+    filter_horizontal = ('types', 'genres', 'languages', 'spatial_coverage')
+    fieldsets = (
+        (
+            '',
+            {
+                'fields': (('fonds', 'subfonds', 'series', 'container_no', 'sequence_no'), 'collection')
+             }
+        ), (
+            '',
+            {
+                'classes': ('wide', ),
+                'fields': (
+                    'title_original', 'title_english',
+                )
+            }
+        ), (
+            '',
+            {
+                'classes': ('grp-collapse grp-closed placeholder record_descriptions-group',),
+                'fields': ()
+            }
+        ), (
+            '',
+            {
+                'classes': ("placeholder record_subjects-group",),
+                'fields': (),
+            }
+        ), (
+            '',
+            {
+                'classes': ("placeholder record_subject_people-group",),
+                'fields': (),
+            }
+        )
+    )
+
+    def archival_reference_number(self, obj):
+        return "HU OSA %s-%s-%s/%s:%s" % (obj.fonds, obj.subfonds, obj.series, obj.container_no, obj.sequence_no)
+
+    class Media:
+        css = {
+            'all': ('repository/css/styles.css',)
+        }
+
+
+'''
+class RecordAdmin(admin.ModelAdmin):
+    readonly_fields = ('fonds', 'subfonds', 'series')
+    list_display = ('archival_reference_number', 'title_original', 'title_english')
+    ordering = ('fonds', 'subfonds', 'series', 'container_no', 'sequence_no')
+    list_filter = (
+        ('collection', admin.RelatedOnlyFieldListFilter),
         ('fonds')
     )
     inlines = [
@@ -174,6 +234,23 @@ class RecordAdmin(admin.ModelAdmin):
         css = {
             'all': ('repository/css/styles.css',)
         }
+'''
+
+class RecordDescriptionAdmin(admin.ModelAdmin):
+    list_display = ('archival_reference_number', 'title_original', 'description')
+    list_editable = ('description',)
+    ordering = ('record__fonds', 'record__subfonds', 'record__series', 'record__container_no', 'record__sequence_no', 'id')
+
+    def archival_reference_number(self, obj):
+        return "HU OSA %s-%s-%s/%s:%s" % (obj.record.fonds, obj.record.subfonds, obj.record.series, obj.record.container_no, obj.record.sequence_no)
+
+    def title_original(self, obj):
+        return obj.record.title_original
+
+    class Media:
+        css = {
+            'all': ('repository/css/description-admin.css',)
+        }
 
 
 class CollectionAdmin(admin.ModelAdmin):
@@ -204,6 +281,7 @@ class RecordSubjectAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Record, RecordAdmin)
+admin.site.register(RecordDescription, RecordDescriptionAdmin)
 admin.site.register(Collection, CollectionAdmin)
 admin.site.register(City, CityAdmin)
 admin.site.register(Type, TypeAdmin)
